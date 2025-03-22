@@ -1,7 +1,7 @@
 import { Config } from '../types';
 
 export const config: Config = {
-  SERVER_URL: import.meta.env.VITE_SERVER_URL,
+  SERVER_URL: import.meta.env.DEV ? 'http://localhost:3000' : 'https://maple-backend-production.up.railway.app', // fix later
 }
 
 if (!config.SERVER_URL) {
