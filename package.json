@@ -1,0 +1,17 @@
+{
+  "name": "htg",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "cd backend && npm install && cd ../frontend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
