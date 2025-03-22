@@ -1,4 +1,3 @@
-import { countTokens } from "../utils/tokenizer";
 import { debounce } from "../utils/debounce";
 
 // Immediately log to verify script execution
@@ -61,8 +60,7 @@ try {
   );
 
   interface SessionStats {
-    inputTokens: number;
-    outputTokens: number;
+    prompts: number;
     cachedMessages: string[];
   }
 
@@ -71,12 +69,9 @@ try {
     data?: SessionStats;
   }
 
-  console.log("[contentScript] Script loaded");
-
   // Track token counts for the current session
   let sessionStats: SessionStats = {
-    inputTokens: 0,
-    outputTokens: 0,
+    prompts: 0,
     cachedMessages: [],
   };
 
@@ -91,52 +86,6 @@ try {
       console.log("[contentScript] Using stored stats", sessionStats);
     }
   });
-
-  // Observer configuration
-  const observerConfig: MutationObserverInit = {
-    childList: true,
-    subtree: true,
-  };
-
-  // Function to process user input
-  function processUserInput(element: Element): number | undefined {
-    console.log("[contentScript] processUserInput called");
-    const textElement = element.querySelector(".bg-token-message-surface");
-    if (!textElement || !textElement.textContent?.length) {
-      console.error("[contentScript] Text element not found");
-      return;
-    }
-    const text = textElement.textContent;
-    const tokens = countTokens(text);
-    return tokens;
-  }
-
-  // Function to process ChatGpt output
-  function processChatGptOutput(element: Element): number | undefined {
-    function getText(node: Node, accumulator: string[]) {
-      if (node.nodeType === 3) {
-        // 3 == text node
-        console.log("found text node", node.nodeValue);
-
-        if (node.nodeValue) accumulator.push(node.nodeValue);
-      } else {
-        for (let child of node.childNodes) getText(child, accumulator);
-      }
-    }
-    console.log("[contentScript] processChatGptOutput called");
-    const gptMarkdown = element.querySelector(".markdown.prose");
-    if (!gptMarkdown || !gptMarkdown.textContent?.length) {
-      console.error("[contentScript] GPT markdown element not found");
-      return;
-    }
-    const textArr: string[] = [];
-    getText(gptMarkdown, textArr);
-    textArr.join("");
-    const text = textArr.join("");
-    console.log(text);
-    return countTokens(text);
-  }
-
   // Update statistics in storage
   function updateStats(): void {
     console.log("[contentScript] updateStats called", sessionStats);
@@ -161,37 +110,18 @@ try {
 
   const calculateTokens = debounce(() => {
     console.log("[contentScript] calculateTokens called");
-    let statsUpdated = false;
+    const newMes = new Set(
+      [...document.querySelectorAll("[data-message-author-role='user']")].map(
+        (element) => extractMessageID(element)
+      )
+    );
 
-    document
-      .querySelectorAll("[data-message-author-role='user']")
-      .forEach((element) => {
-        if (
-          sessionStats.cachedMessages.includes(extractMessageID(element) || "")
-        ) {
-          return;
-        }
-        sessionStats.cachedMessages.push(extractMessageID(element) || "");
-        const msgTokens = processUserInput(element);
-        sessionStats.inputTokens += msgTokens || 0;
-        statsUpdated = true;
-      });
-    document
-      .querySelectorAll("[data-message-author-role='assistant']")
-      .forEach((element) => {
-        if (
-          sessionStats.cachedMessages.includes(extractMessageID(element) || "")
-        ) {
-          return;
-        }
-        sessionStats.cachedMessages.push(extractMessageID(element) || "");
-        const msgTokens = processChatGptOutput(element);
-        sessionStats.outputTokens += msgTokens || 0;
-        statsUpdated = true;
-      });
+    const totalMes = new Set(sessionStats.cachedMessages).union(newMes);
 
     // Update storage if any changes were made
-    if (statsUpdated) {
+    if (totalMes.size !== sessionStats.cachedMessages.length) {
+      sessionStats.cachedMessages = Array.from(totalMes);
+      sessionStats.prompts = sessionStats.cachedMessages.length;
       updateStats();
     }
   }, 5000);
@@ -205,11 +135,11 @@ try {
   const presentationElement = document.querySelector('[role="presentation"]');
 
   if (!presentationElement) {
-    console.error("[contentScript] Presentation element not found");
+    console.log("[contentScript] Presentation element not found");
     // Start observing
   } else {
     console.log("[contentScript] Starting to observe DOM changes");
-    observer.observe(presentationElement, observerConfig);
+    observer.observe(presentationElement, { childList: true, subtree: true });
   }
 
   // Listen for messages from the popup
@@ -223,8 +153,7 @@ try {
       } else if (message.type === "RESET_COUNTS") {
         console.log("[contentScript] Resetting counts");
         sessionStats = {
-          inputTokens: 0,
-          outputTokens: 0,
+          prompts: 0,
           cachedMessages: [],
         } as SessionStats;
         updateStats();

@@ -9,13 +9,22 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "chatgpt.com/*"
       ],
       "js": [
-        "contentScript.js"
+        "chatgpt.js"
       ],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": [
+        "oak.nnourr.tech",
+        "localhost:3000"
+      ],
+      "js": [
+        "dashboard.js"
+      ]
     }
   ],
   "permissions": [

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import TokenCounter from "./TokenCounter";
 
 export interface TokenStats {
-  inputTokens: number;
-  outputTokens: number;
+  prompts: number;
   cachedMessages: string[];
 }
 
@@ -15,8 +14,7 @@ interface Message {
 const Popup: React.FC = () => {
   console.log("[Popup] Component rendering");
   const [stats, setStats] = useState<TokenStats>({
-    inputTokens: 0,
-    outputTokens: 0,
+    prompts: 0,
     cachedMessages: [],
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -384,8 +382,7 @@ const Popup: React.FC = () => {
         chrome.tabs.sendMessage(tabs[0].id!, { type: "RESET_COUNTS" }, () => {
           console.log("[Popup] Reset complete, updating local stats");
           setStats({
-            inputTokens: 0,
-            outputTokens: 0,
+            prompts: 0,
             cachedMessages: [],
           });
         });
@@ -420,11 +417,7 @@ const Popup: React.FC = () => {
         )}
       </header>
 
-      <TokenCounter
-        inputTokens={stats.inputTokens}
-        outputTokens={stats.outputTokens}
-        onReset={handleReset}
-      />
+      <TokenCounter prompts={stats.prompts} onReset={handleReset} />
 
       <footer className="mt-4 text-center text-gray-500 text-xs">
         <small>
@@ -438,41 +431,6 @@ const Popup: React.FC = () => {
           </button>
         </small>
       </footer>
-
-      {/* Debug section */}
-      <div className="mt-3 pt-2 border-t border-dashed border-gray-300">
-        <button
-          className="block mx-auto text-gray-500 text-xs underline"
-          onClick={() =>
-            document.querySelector(".debug-info")?.classList.toggle("hidden")
-          }
-        >
-          Show Debug Info
-        </button>
-        <div className="debug-info hidden mt-2 bg-gray-100 p-2 rounded font-mono text-xs whitespace-pre-wrap max-h-36 overflow-y-auto">
-          <pre>{debugInfo}</pre>
-          <div className="flex justify-between mt-2">
-            <button
-              className="text-xs px-1.5 py-0.5 bg-gray-50 border border-gray-300 rounded"
-              onClick={() => loadStatsFromCurrentTab()}
-            >
-              Refresh
-            </button>
-            <button
-              className="text-xs px-1.5 py-0.5 bg-gray-50 border border-gray-300 rounded"
-              onClick={() => checkContentScript(currentTabId!)}
-            >
-              Check Script ({checkAttempts})
-            </button>
-            <button
-              className="text-xs px-1.5 py-0.5 bg-gray-50 border border-gray-300 rounded"
-              onClick={() => reloadContentScript()}
-            >
-              Reinstall Script
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

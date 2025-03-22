@@ -92,8 +92,7 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log("[background] storage.local.get callback", result);
     if (!result.tokenStats) {
       const stringInitialStats: TokenStats = {
-        inputTokens: 0,
-        outputTokens: 0,
+        prompts: 0,
         cachedMessages: [],
       };
       console.log("[background] Initializing stats", stringInitialStats);
