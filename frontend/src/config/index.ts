@@ -1,7 +1,7 @@
 import { Config } from '../types';
 
 export const config: Config = {
-  SERVER_URL: import.meta.env.VITE_SERVER_URL || 'http://localhost:3000',
+  SERVER_URL: import.meta.env.VITE_SERVER_URL,
 }
 
 if (!config.SERVER_URL) {
