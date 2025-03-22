@@ -15,6 +15,12 @@ export default {
           100: '#f6f6ec', // Main background
           200: '#efefe0',
           300: '#e8e8d4',
+          400: '#e1e1c8',
+          500: '#dadabc',
+          600: '#d3d3b0',
+          700: '#cccc94',
+          800: '#c5c588',
+          900: '#bebe7c',
           DEFAULT: '#f6f6ec'
         },
         green: {

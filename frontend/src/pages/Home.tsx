@@ -14,9 +14,9 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
+    <div className="overflow-hidden min-h-screen flex flex-col items-center justify-center">
       <div className="w-full max-w-2xl px-4 mb-12" id="mount-hook">
-        <div className="pointer-events-none flex flex-row items-center justify-center scale-250 mb-4">
+        <div className="pointer-events-none flex flex-row items-center justify-center scale-250 mb-4 max-w-screen">
           <img
             src="/public/logo.svg"
             alt="Oak"
