@@ -63,7 +63,7 @@ try {
   interface SessionStats {
     inputTokens: number;
     outputTokens: number;
-    conversations: number;
+    cachedMessages: string[];
   }
 
   interface Message {
@@ -77,8 +77,11 @@ try {
   let sessionStats: SessionStats = {
     inputTokens: 0,
     outputTokens: 0,
-    conversations: 0,
+    cachedMessages: [],
   };
+
+  // Track the autosave interval
+  let autoSaveInterval: number | null = null;
 
   // Load existing stats
   chrome.storage.local.get(["tokenStats"], (result) => {
@@ -96,7 +99,7 @@ try {
   };
 
   // Function to process user input
-  function processUserInput(element: Element): void {
+  function processUserInput(element: Element): number | undefined {
     console.log("[contentScript] processUserInput called");
     const textElement = element.querySelector(".bg-token-message-surface");
     if (!textElement || !textElement.textContent?.length) {
@@ -104,31 +107,34 @@ try {
       return;
     }
     const text = textElement.textContent;
-    console.log(text);
+    const tokens = countTokens(text);
+    return tokens;
   }
 
   // Function to process ChatGpt output
-  function processChatGptOutput(): void {
-    console.log("[contentScript] processChatGptOutput called");
-    const gptOutputElements = document.querySelectorAll(".markdown.prose");
-    console.log(
-      "[contentScript] Found GPT output elements:",
-      gptOutputElements.length
-    );
-    gptOutputElements.forEach((element) => {
-      if (!(element as HTMLElement).dataset.counted) {
-        const text = element.textContent || "";
-        const tokens = countTokens(text);
-        console.log("[contentScript] Processing GPT output:", {
-          textLength: text.length,
-          tokens,
-        });
-        sessionStats.outputTokens += tokens;
-        (element as HTMLElement).dataset.counted = "true";
+  function processChatGptOutput(element: Element): number | undefined {
+    function getText(node: Node, accumulator: string[]) {
+      if (node.nodeType === 3) {
+        // 3 == text node
+        console.log("found text node", node.nodeValue);
 
-        updateStats();
+        if (node.nodeValue) accumulator.push(node.nodeValue);
+      } else {
+        for (let child of node.childNodes) getText(child, accumulator);
       }
-    });
+    }
+    console.log("[contentScript] processChatGptOutput called");
+    const gptMarkdown = element.querySelector(".markdown.prose");
+    if (!gptMarkdown || !gptMarkdown.textContent?.length) {
+      console.error("[contentScript] GPT markdown element not found");
+      return;
+    }
+    const textArr: string[] = [];
+    getText(gptMarkdown, textArr);
+    textArr.join("");
+    const text = textArr.join("");
+    console.log(text);
+    return countTokens(text);
   }
 
   // Update statistics in storage
@@ -144,13 +150,50 @@ try {
     });
   }
 
+  function extractMessageID(element: Element): string {
+    const messageId = element.getAttribute("data-message-id");
+    if (!messageId) {
+      console.error("[contentScript] Message ID not found");
+      return "";
+    }
+    return messageId;
+  }
+
   const calculateTokens = debounce(() => {
     console.log("[contentScript] calculateTokens called");
+    let statsUpdated = false;
+
     document
       .querySelectorAll("[data-message-author-role='user']")
       .forEach((element) => {
-        processUserInput(element);
+        if (
+          sessionStats.cachedMessages.includes(extractMessageID(element) || "")
+        ) {
+          return;
+        }
+        sessionStats.cachedMessages.push(extractMessageID(element) || "");
+        const msgTokens = processUserInput(element);
+        sessionStats.inputTokens += msgTokens || 0;
+        statsUpdated = true;
       });
+    document
+      .querySelectorAll("[data-message-author-role='assistant']")
+      .forEach((element) => {
+        if (
+          sessionStats.cachedMessages.includes(extractMessageID(element) || "")
+        ) {
+          return;
+        }
+        sessionStats.cachedMessages.push(extractMessageID(element) || "");
+        const msgTokens = processChatGptOutput(element);
+        sessionStats.outputTokens += msgTokens || 0;
+        statsUpdated = true;
+      });
+
+    // Update storage if any changes were made
+    if (statsUpdated) {
+      updateStats();
+    }
   }, 5000);
 
   // Initialize observer
@@ -182,8 +225,8 @@ try {
         sessionStats = {
           inputTokens: 0,
           outputTokens: 0,
-          conversations: 0,
-        };
+          cachedMessages: [],
+        } as SessionStats;
         updateStats();
         sendResponse({ success: true });
       }
@@ -224,6 +267,17 @@ try {
           document.body.removeChild(pingResponse);
         }
       }, 2000);
+    }
+  });
+
+  // Clean up the interval when the content script is unloaded
+  window.addEventListener("beforeunload", () => {
+    if (autoSaveInterval !== null) {
+      clearInterval(autoSaveInterval);
+      console.log("[contentScript] Cleared auto-save interval");
+
+      // Save one last time before unloading
+      updateStats();
     }
   });
 } catch (error: any) {

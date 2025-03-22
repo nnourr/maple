@@ -91,9 +91,8 @@ npm run build
 
 ## Limitations
 
-- Token counting is approximate and may not exactly match OpenAI's pricing
-- The extension only tracks the current browser session
-- Works best with ChatGPT's web interface
+- Token counting is approximate and may not exactly match OpenAI
+- Coupled to ChatGPT's interface
 
 ## License
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import TokenCounter from "./TokenCounter";
 
-interface TokenStats {
+export interface TokenStats {
   inputTokens: number;
   outputTokens: number;
-  conversations: number;
+  cachedMessages: string[];
 }
 
 interface Message {
@@ -17,7 +17,7 @@ const Popup: React.FC = () => {
   const [stats, setStats] = useState<TokenStats>({
     inputTokens: 0,
     outputTokens: 0,
-    conversations: 0,
+    cachedMessages: [],
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [contentScriptActive, setContentScriptActive] = useState<
@@ -386,7 +386,7 @@ const Popup: React.FC = () => {
           setStats({
             inputTokens: 0,
             outputTokens: 0,
-            conversations: 0,
+            cachedMessages: [],
           });
         });
       }

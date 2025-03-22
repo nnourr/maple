@@ -1,8 +1,4 @@
-interface TokenStats {
-  inputTokens: number;
-  outputTokens: number;
-  conversations: number;
-}
+import { TokenStats } from "../src/components/Popup";
 
 // Track which tabs have our content script running
 const activeTabsWithScript = new Set<number>();
@@ -95,14 +91,14 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(["tokenStats"], (result) => {
     console.log("[background] storage.local.get callback", result);
     if (!result.tokenStats) {
-      const initialStats: TokenStats = {
+      const stringInitialStats: TokenStats = {
         inputTokens: 0,
         outputTokens: 0,
-        conversations: 0,
+        cachedMessages: [],
       };
-      console.log("[background] Initializing stats", initialStats);
+      console.log("[background] Initializing stats", stringInitialStats);
       chrome.storage.local.set({
-        tokenStats: initialStats,
+        tokenStats: stringInitialStats,
       });
     }
   });
