@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
 
-@layer base {
-  body {
-    @apply bg-gray-50;
-  }
-}
-
 body {
   margin: 0;
+  background-color: #f6f6ec;
   min-height: 100svh;
   min-width: 100svw;
 }
