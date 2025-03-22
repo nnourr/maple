@@ -18,6 +18,11 @@ app.use(morgan('dev'));
 // Brave Search API base URL
 const BRAVE_API_BASE_URL = 'https://api.search.brave.com/res/v1';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 5;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
 // Middleware to check for API key
 const checkApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const apiKey = process.env.BRAVE_API_KEY;
@@ -29,15 +34,38 @@ const checkApiKey = (req: express.Request, res: express.Response, next: express.
 
 // Generic search handler
 const handleSearch = async (searchType: string, query: string, count: number = 10) => {
-  const response = await axios.get(`${BRAVE_API_BASE_URL}/${searchType}/search`, {
-    params: { q: query, count },
-    headers: {
-      'Accept': 'application/json',
-      'Accept-Encoding': 'gzip',
-      'X-Subscription-Token': process.env.BRAVE_API_KEY
+  let retries = 0;
+  let lastError: any;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      const response = await axios.get(`${BRAVE_API_BASE_URL}/${searchType}/search`, {
+        params: { q: query, count },
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+          'X-Subscription-Token': process.env.BRAVE_API_KEY
+        }
+      });
+      return response.data;
+    } catch (error: any) {
+      lastError = error;
+      
+      // Only retry on rate limit errors (429) or server errors (5xx)
+      if (error.response?.status !== 429 && !(error.response?.status >= 500 && error.response?.status < 600)) {
+        throw error;
+      }
+
+      retries++;
+      if (retries === MAX_RETRIES) {
+        throw new Error(`Failed after ${MAX_RETRIES} retries. Rate limit or server error.`);
+      }
+
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+      const backoffDelay = INITIAL_RETRY_DELAY * Math.pow(2, retries - 1);
+      await delay(backoffDelay);
     }
-  });
-  return response.data;
+  }
 };
 
 // Web Search endpoint

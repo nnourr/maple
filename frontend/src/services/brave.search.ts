@@ -1,8 +1,7 @@
 import { SearchType } from '../types';
 import { config } from '../config';
 
-const API_BASE_URL = `${config.SERVER_URL}/api/search` || 'http://localhost:3000/api/search';
-
+const API_BASE_URL = `${config.SERVER_URL}/api/search`;
 
 export const searchBrave = async (query: string, offset: number, count: number, type: SearchType) => {
   const params = new URLSearchParams({
@@ -18,6 +17,10 @@ export const searchBrave = async (query: string, offset: number, count: number, 
       'Accept-Encoding': 'gzip',
     }
   });
-  const data = await response.json();
-  return data;
+
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.statusText}`);
+  }
+
+  return response.json();
 };
