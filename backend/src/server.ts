@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import morgan from 'morgan';
 import { RequestAggregator } from './utils/RequestAggregator';
+import os from 'os';
 
 dotenv.config();
 
@@ -14,6 +15,29 @@ const aggregator = new RequestAggregator(1000); // 1 second window
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Middleware to track system metrics
+app.use((req, res, next) => {
+  // Get CPU usage
+  const cpus = os.cpus();
+  const cpuUsage = cpus.reduce((acc, cpu) => {
+    const total = Object.values(cpu.times).reduce((a, b) => a + b);
+    const idle = cpu.times.idle;
+    return acc + ((total - idle) / total * 100);
+  }, 0) / cpus.length;
+
+  // Get memory usage
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = (totalMemory - freeMemory) / 1024 / 1024; // Convert to MB
+
+  // Add metrics to response headers
+  res.set('X-CPU-Usage', cpuUsage.toFixed(2));
+  res.set('X-Memory-Usage', usedMemory.toFixed(2));
+  res.set('X-Total-Memory', (totalMemory / 1024 / 1024).toFixed(2));
+  
+  next();
+});
 
 // Brave Search API base URL
 const BRAVE_API_BASE_URL = 'https://api.search.brave.com/res/v1';
@@ -72,6 +96,10 @@ const handleSearch = async (searchType: string, query: string, count: number = 1
 app.get('/api/search/web', checkApiKey, async (req, res) => {
   try {
     const { q, count } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    
     const key = `web:${q}:${count}`;
     
     const result = await aggregator.execute(key, () => 
@@ -79,8 +107,13 @@ app.get('/api/search/web', checkApiKey, async (req, res) => {
     );
     
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch search results' });
+  } catch (error: any) {
+    console.error('Web search error:', error.message, error.response?.data);
+    res.status(500).json({ 
+      error: 'Failed to fetch search results',
+      details: error.message,
+      type: error.response?.data?.error || 'Unknown error'
+    });
   }
 });
 
@@ -88,6 +121,10 @@ app.get('/api/search/web', checkApiKey, async (req, res) => {
 app.get('/api/search/images', checkApiKey, async (req, res) => {
   try {
     const { q, count } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    
     const key = `images:${q}:${count}`;
     
     const result = await aggregator.execute(key, () => 
@@ -95,8 +132,13 @@ app.get('/api/search/images', checkApiKey, async (req, res) => {
     );
     
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch image results' });
+  } catch (error: any) {
+    console.error('Image search error:', error.message, error.response?.data);
+    res.status(500).json({ 
+      error: 'Failed to fetch image results',
+      details: error.message,
+      type: error.response?.data?.error || 'Unknown error'
+    });
   }
 });
 
@@ -104,6 +146,10 @@ app.get('/api/search/images', checkApiKey, async (req, res) => {
 app.get('/api/search/news', checkApiKey, async (req, res) => {
   try {
     const { q, count } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    
     const key = `news:${q}:${count}`;
     
     const result = await aggregator.execute(key, () => 
@@ -111,8 +157,13 @@ app.get('/api/search/news', checkApiKey, async (req, res) => {
     );
     
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch news results' });
+  } catch (error: any) {
+    console.error('News search error:', error.message, error.response?.data);
+    res.status(500).json({ 
+      error: 'Failed to fetch news results',
+      details: error.message,
+      type: error.response?.data?.error || 'Unknown error'
+    });
   }
 });
 
@@ -120,6 +171,10 @@ app.get('/api/search/news', checkApiKey, async (req, res) => {
 app.get('/api/search/videos', checkApiKey, async (req, res) => {
   try {
     const { q, count } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    
     const key = `videos:${q}:${count}`;
     
     const result = await aggregator.execute(key, () => 
@@ -127,8 +182,13 @@ app.get('/api/search/videos', checkApiKey, async (req, res) => {
     );
     
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch video results' });
+  } catch (error: any) {
+    console.error('Video search error:', error.message, error.response?.data);
+    res.status(500).json({ 
+      error: 'Failed to fetch video results',
+      details: error.message,
+      type: error.response?.data?.error || 'Unknown error'
+    });
   }
 });
 
