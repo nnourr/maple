@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TokenCounter from "./TokenCounter";
+import PageViewStats from "./PageViewStats";
 import { TokenDatabase, TokenStats } from "../utils/db";
 
 interface Message {
@@ -454,6 +455,9 @@ const Popup: React.FC = () => {
       </header>
 
       <TokenCounter stats={stats} onReset={handleReset} />
+
+      {/* Add PageViewStats component */}
+      <PageViewStats />
 
       <footer className="mt-4 text-center text-gray-500 text-xs">
         <small>

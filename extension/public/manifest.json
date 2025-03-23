@@ -15,8 +15,16 @@
       "js": [
         "chatgpt.js"
       ],
-      "run_at": "document_idle",
-      "all_frames": false
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "pageview.js"
+      ],
+      "run_at": "document_idle"
     },
     {
       "matches": [
@@ -46,11 +54,11 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "chatgpt.js"
+        "chatgpt.js",
+        "pageview.js"
       ],
       "matches": [
-        "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*"
+        "<all_urls>"
       ]
     },
     {

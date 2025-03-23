@@ -13,12 +13,14 @@ module.exports = {
     popup: './src/popup.tsx',
     background: './src/background.ts',
     chatgpt: './src/content/chatgpt.ts',
+    pageview: './src/content/pageview.ts',
     dashboard: './src/content/dashboard.tsx'
   },
   devtool: 'inline-source-map', // Changed from default eval source map
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
+    clean: true, // Clean the output directory before emit
   },
   module: {
     rules: [
