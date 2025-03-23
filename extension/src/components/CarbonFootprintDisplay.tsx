@@ -93,6 +93,9 @@ const CarbonFootprintDisplay: React.FC = () => {
           <span className="text-lg font-bold text-emerald-700">
             {formatFootprint(carbonData.totalFootprint)}
           </span>
+          <div className="text-xs text-emerald-700 mt-1 text-center">
+            {getComparison(carbonData.totalFootprint)}
+          </div>
         </div>
       </div>
 
@@ -109,6 +112,29 @@ const CarbonFootprintDisplay: React.FC = () => {
             {formatFootprint(carbonData.pageViewFootprint)}
           </span>
         </div>
+        {carbonData.totalFootprint > 0 && (
+          <div className="w-full flex justify-center items-center">
+            <button
+              className="px-4 py-2 bg-emerald-50 border-2 shadow-2xs hover:shadow transition-all border-emerald-800/20 font-bold text-emerald-800 text-xl rounded-lg w-4/5 cursor-pointer"
+              onClick={() => {
+                window.open(
+                  "https://onetreeplanted.org/products/plant-trees?srsltid=AfmBOorpHc-0sj5h_W47S-DvaGLKOVoeSEM39oDDfwvZUlUbtcPOZuXh",
+                  "_blank"
+                );
+                setCarbonData((prev) => {
+                  return {
+                    ...prev,
+                    totalFootprint: 0,
+                    promptFootprint: 0,
+                    pageViewFootprint: 0,
+                  };
+                });
+              }}
+            >
+              Plant {getTreeOffset(carbonData.totalFootprint)} Tree(s)
+            </button>
+          </div>
+        )}
         {/* Monthly Footprint Panel */}
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-center mb-1">
@@ -121,30 +147,6 @@ const CarbonFootprintDisplay: React.FC = () => {
               {formatFootprint(monthlyFootprint)}
             </span>
           </div>
-          <div className="text-xs text-blue-600 mt-1 text-center">
-            {getComparison(monthlyFootprint)}
-          </div>
-        </div>
-        <div className="w-full flex justify-center items-center">
-          <button
-            className="px-4 py-2 bg-emerald-50 border-2 shadow-2xs hover:shadow transition-all border-emerald-800/20 font-bold text-emerald-800 text-xl rounded-lg w-4/5 cursor-pointer"
-            onClick={() => {
-              window.open(
-                "https://onetreeplanted.org/products/trees",
-                "_blank"
-              );
-              setCarbonData((prev) => {
-                return {
-                  ...prev,
-                  totalFootprint: 0,
-                  promptFootprint: 0,
-                  pageViewFootprint: 0,
-                };
-              });
-            }}
-          >
-            Plant {getTreeOffset(monthlyFootprint)} Tree(s)
-          </button>
         </div>
         <div className="flex justify-between mt-2 pt-2 border-t border-gray-100">
           <span>Monthly ChatGPT usage:</span>
