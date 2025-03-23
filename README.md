@@ -1,6 +1,20 @@
-# ChatGPT Token Counter
+# Oak - Eco-Friendly Search and Browser Extension
 
-A Chrome extension that counts the input and output tokens used in ChatGPT conversations, helping you track your usage and estimate costs.
+Oak is a multi-component project focused on providing eco-friendly browsing and search experiences. It consists of three main components:
+
+1. **Oak Search Frontend**: A privacy-focused search engine with an eco-friendly mission
+2. **Oak Extension**: A browser extension that tracks token usage and carbon footprint
+3. **Search API Backend**: A server that handles search requests and aggregates statistics
+
+## Environmental Impact
+
+Oak aims to help users understand and reduce their digital carbon footprint by:
+
+- Tracking ChatGPT prompt usage and associated emissions
+- Monitoring web browsing activity and related carbon costs
+- Providing metrics on total carbon impact with daily and monthly estimates
+- Offering tree planting options to offset digital carbon emissions
+- Visualizing usage patterns to encourage mindful usage of AI and web resources
 
 ## Features
 

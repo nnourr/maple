@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ChatGPT Token Counter",
+  "name": "Oak",
   "version": "1.0.0",
   "description": "Counts input and output tokens used in ChatGPT conversations",
   "action": {
