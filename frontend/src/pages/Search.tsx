@@ -111,7 +111,7 @@ export default function SearchPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <a href="/" className="flex flex-row items-center justify-center mr-2">
-              <img src="/public/logo.svg" alt="Oak" className="w-8 h-8" />
+              <img src="/logo.svg" alt="Oak" className="w-8 h-8" />
             </a>
               <div className="flex-1">
               <form onSubmit={handleSearch}>

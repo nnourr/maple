@@ -9,7 +9,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source code
+# Copy source code and public directory
 COPY . .
 
 # Build the application
@@ -25,6 +25,7 @@ RUN npm install -g serve
 
 # Copy built assets from build stage
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/public ./dist/public
 
 # Expose port
 EXPOSE 5173

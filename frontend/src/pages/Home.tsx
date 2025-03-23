@@ -18,12 +18,12 @@ function Home() {
       <div className="w-full h-3/5 max-w-2xl px-4" id="mount-hook">
         <div className="pointer-events-none flex flex-row items-center justify-center mb-4 gap-4 max-w-screen">
           <img
-            src="/public/logo.svg"
+            src="/logo.svg"
             alt="Oak"
             className="w-36 aspect-square mb-8  "
           />
           <img
-            src="/public/logo-text.png"
+            src="/logo-text.png"
             alt="Oak"
             className="w-72 aspect-auto mb-2 "
           />
