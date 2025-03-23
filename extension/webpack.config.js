@@ -14,7 +14,8 @@ module.exports = {
     background: './src/background.ts',
     chatgpt: './src/content/chatgpt.ts',
     pageview: './src/content/pageview.ts',
-    dashboard: './src/content/dashboard.tsx'
+    dashboard: './src/content/dashboard.tsx',
+    marketplace: './src/content/injectMarketplace.tsx'
   },
   devtool: 'inline-source-map', // Changed from default eval source map
   output: {

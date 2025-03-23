@@ -28,6 +28,14 @@
     },
     {
       "matches": [
+        "%OAK_URL%/"
+      ],
+      "js": [
+        "marketplace.js"
+      ]
+    },
+    {
+      "matches": [
         "%OAK_URL%/*"
       ],
       "js": [
@@ -59,6 +67,14 @@
       ],
       "matches": [
         "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "marketplace.js"
+      ],
+      "matches": [
+        "%OAK_URL%/*"
       ]
     },
     {
