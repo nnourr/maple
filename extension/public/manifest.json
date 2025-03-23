@@ -55,7 +55,8 @@
     {
       "resources": [
         "chatgpt.js",
-        "pageview.js"
+        "pageview.js",
+        "./public/*"
       ],
       "matches": [
         "<all_urls>"

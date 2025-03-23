@@ -22,17 +22,4 @@ if (mountHook) {
   console.error(
     "[dashboard] Mount hook not found, creating fallback container"
   );
-
-  // Create a fallback container if mount-hook doesn't exist
-  const container = document.createElement("div");
-  container.id = "extension-dashboard-container";
-  container.style.margin = "20px auto";
-  container.style.maxWidth = "800px";
-  container.style.padding = "20px";
-
-  // Add it to the body
-  document.body.appendChild(container);
-
-  const root = createRoot(container);
-  root.render(<Dashboard />);
 }

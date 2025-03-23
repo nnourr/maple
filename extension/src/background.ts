@@ -1,4 +1,5 @@
 import { TokenDatabase, TokenStats } from "./utils/db";
+import { UnifiedStatsTracker } from "./utils/unifiedStatsTracker";
 
 // Track which tabs have our content scripts running
 const activeTabsWithScript = new Set<number>();
@@ -148,11 +149,33 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   chrome.storage.local.remove(`tab_${tabId}_has_script`);
 });
 
+// Set up a timer to record unified stats every 60 seconds
+let unifiedStatsInterval: number | null = null;
+
+function startUnifiedStatsRecording() {
+  console.log("[background] Starting unified stats recording");
+
+  // Record immediately once
+  UnifiedStatsTracker.recordUnifiedStats();
+
+  // Set interval to record every 60 seconds
+  unifiedStatsInterval = window.setInterval(async () => {
+    console.log("[background] Recording unified stats (60-second interval)");
+    const record = await UnifiedStatsTracker.recordUnifiedStats();
+    if (record) {
+      console.log("[background] New unified record:", record);
+    }
+  }, 60000); // 60 seconds
+}
+
 // Handle installation and updates
 chrome.runtime.onInstalled.addListener(() => {
   console.log("[background] onInstalled event fired");
   // Initialize the storage
   initializeStorage();
+
+  // Start unified stats recording
+  startUnifiedStatsRecording();
 
   // Inject the content script into any existing ChatGPT tabs
   chrome.tabs.query({ url: "https://chatgpt.com/*" }, (tabs) => {
@@ -162,4 +185,13 @@ chrome.runtime.onInstalled.addListener(() => {
       }
     });
   });
+});
+
+// Clean up interval when extension is unloaded
+chrome.runtime.onSuspend.addListener(() => {
+  console.log("[background] onSuspend event fired");
+  if (unifiedStatsInterval !== null) {
+    clearInterval(unifiedStatsInterval);
+    console.log("[background] Cleared unified stats interval");
+  }
 });

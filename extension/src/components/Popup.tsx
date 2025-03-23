@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import TokenCounter from "./TokenCounter";
 import PageViewStats from "./PageViewStats";
 import { TokenDatabase, TokenStats } from "../utils/db";
+import UnifiedStatsChart from "./UnifiedStatsChart";
+import CarbonFootprintDisplay from "./CarbonFootprintDisplay";
 
 interface Message {
   type: string;
@@ -436,12 +438,21 @@ const Popup: React.FC = () => {
 
   console.log("[Popup] Rendering with stats", stats);
   return (
-    <div className="p-4 bg-gray-50">
-      <header className="mb-4 border-b border-gray-200 pb-2">
-        <h1 className="text-lg font-medium text-gray-800 mb-2">
-          ChatGPT Token Counter
-        </h1>
-        {contentScriptActive === false && (
+    <div className="p-4 bg-[#efefe0] border-2 border-solid inside-">
+      <header className="mb-4  pb-2">
+        <div className="flex items-center justify-center gap-2">
+          <img
+            className="aspect-auto h-16"
+            src={chrome.runtime.getURL("/logo.svg")}
+            alt="Logo"
+          />
+          <img
+            className="aspect-auto h-16"
+            src={chrome.runtime.getURL("/logo-text.png")}
+            alt="Logo"
+          />
+        </div>
+        {/* {contentScriptActive === false && (
           <div className="bg-red-50 text-red-800 p-2 rounded text-xs text-center mt-1">
             Content script is not active. Please refresh the ChatGPT page.
             <button
@@ -451,17 +462,15 @@ const Popup: React.FC = () => {
               Attempt Repair
             </button>
           </div>
-        )}
+        )} */}
       </header>
 
-      <TokenCounter stats={stats} onReset={handleReset} />
-
-      {/* Add PageViewStats component */}
-      <PageViewStats />
+      <CarbonFootprintDisplay />
+      <UnifiedStatsChart />
 
       <footer className="mt-4 text-center text-gray-500 text-xs">
         <small>
-          Refresh the page if counts seem inaccurate
+          Refresh the page if stats seem inaccurate
           <br />
           <button
             className="mt-1 px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs hover:bg-gray-200"
