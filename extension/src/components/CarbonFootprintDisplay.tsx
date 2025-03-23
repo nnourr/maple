@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { UnifiedStatsTracker } from "../utils/unifiedStatsTracker";
+import {
+  PAGEVIEW_CARBON_FACTOR,
+  PROMPT_CARBON_FACTOR,
+  UnifiedStatsTracker,
+} from "../utils/unifiedStatsTracker";
 
 interface CarbonFootprint {
   promptFootprint: number;
@@ -58,56 +62,104 @@ const CarbonFootprintDisplay: React.FC = () => {
     }
   };
 
+  const getTreeOffset = (grams: number): number => {
+    return Math.ceil(grams / 150);
+  };
+
   // Compare to everyday activities for context
   const getComparison = (grams: number): string => {
-    if (grams < 10) {
-      return "Less than sending 1 email with attachment";
-    } else if (grams < 50) {
-      return "Equivalent to charging a smartphone";
-    } else if (grams < 200) {
-      return "Like boiling water for 1 cup of tea";
-    } else if (grams < 1000) {
-      return "Similar to driving a car for 1 km";
-    } else {
-      return "Equivalent to cooking a meal";
-    }
+    return `You need to plant ${getTreeOffset(grams)} tree${
+      getTreeOffset(grams) > 1 ? "s" : ""
+    } to offset this.`;
   };
+
+  // Calculate monthly estimate (today's footprint × 30 days)
+  const monthlyFootprint = carbonData.totalFootprint * 30;
+  const monthlyPromptFootprint = carbonData.promptFootprint * 30;
+  const monthlyPageViewFootprint = carbonData.pageViewFootprint * 30;
 
   return (
     <div className="carbon-footprint mt-4 pt-4 border-t border-gray-200">
       <h3 className="text-sm font-medium mb-2">Carbon Footprint Estimate</h3>
 
-      <div className="bg-emerald-50 p-3 rounded-lg mb-3">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-emerald-700">
-            Today's Digital Footprint:
+      {/* Daily Footprint Panel */}
+      <div className="bg-emerald-50 p-3 rounded-lg">
+        <div className="text-center mb-1">
+          <span className="text-xs uppercase font-medium text-emerald-700">
+            Today's Net Usage
           </span>
+        </div>
+        <div className="text-center">
           <span className="text-lg font-bold text-emerald-700">
             {formatFootprint(carbonData.totalFootprint)}
           </span>
-        </div>
-        <div className="text-xs text-emerald-600 mt-1 italic">
-          {getComparison(carbonData.totalFootprint)}
         </div>
       </div>
 
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span>From ChatGPT prompts:</span>
+          <span>Daily ChatGPT usage:</span>
           <span className="font-medium">
             {formatFootprint(carbonData.promptFootprint)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span>From web browsing:</span>
+          <span>Daily web browsing:</span>
           <span className="font-medium">
             {formatFootprint(carbonData.pageViewFootprint)}
+          </span>
+        </div>
+        {/* Monthly Footprint Panel */}
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <div className="text-center mb-1">
+            <span className="text-xs uppercase font-medium text-blue-700">
+              Monthly Net Projection
+            </span>
+          </div>
+          <div className="text-center">
+            <span className="text-lg font-bold text-blue-700">
+              {formatFootprint(monthlyFootprint)}
+            </span>
+          </div>
+          <div className="text-xs text-blue-600 mt-1 text-center">
+            {getComparison(monthlyFootprint)}
+          </div>
+        </div>
+        <div className="w-full flex justify-center items-center">
+          <button
+            className="px-4 py-2 bg-emerald-50 border-2 border-emerald-800/20 font-bold text-emerald-800 text-xl rounded-lg w-4/5 cursor-pointer"
+            onClick={() => {
+              alert("Planted " + getTreeOffset(monthlyFootprint) + "tree(s)");
+              setCarbonData((prev) => {
+                return {
+                  ...prev,
+                  totalFootprint: 0,
+                  promptFootprint: 0,
+                  pageViewFootprint: 0,
+                };
+              });
+            }}
+          >
+            Plant {getTreeOffset(monthlyFootprint)} Tree(s)
+          </button>
+        </div>
+        <div className="flex justify-between mt-2 pt-2 border-t border-gray-100">
+          <span>Monthly ChatGPT usage:</span>
+          <span className="font-medium">
+            {formatFootprint(monthlyPromptFootprint)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span>Monthly web browsing:</span>
+          <span className="font-medium">
+            {formatFootprint(monthlyPageViewFootprint)}
           </span>
         </div>
       </div>
 
       <div className="mt-3 text-xs text-gray-500">
-        Based on estimates: 4.32g CO₂e per prompt, 1.76g CO₂e per page view
+        Based on estimates: {PROMPT_CARBON_FACTOR}g CO₂e per prompt,{" "}
+        {PAGEVIEW_CARBON_FACTOR}g CO₂e per page view
       </div>
 
       <button
