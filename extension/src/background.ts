@@ -1,7 +1,35 @@
-import { TokenStats } from "../src/components/Popup";
+import { TokenDatabase, TokenStats } from "./utils/db";
 
 // Track which tabs have our content script running
 const activeTabsWithScript = new Set<number>();
+
+// Initialize the database when the extension starts
+async function initializeStorage() {
+  console.log("[background] Initializing storage");
+  try {
+    // Check if we have any existing stats
+    const latestStats = await TokenDatabase.getLatestStats();
+    if (!latestStats) {
+      console.log(
+        "[background] No existing stats found, initializing with empty stats"
+      );
+      // Initialize with empty stats
+      const initialStats: TokenStats = {
+        timestamp: Date.now(),
+        prompts: 0,
+        cachedMessages: [],
+      };
+      await TokenDatabase.saveStats(initialStats);
+    } else {
+      console.log("[background] Found existing stats", latestStats);
+    }
+
+    // Prune history to prevent excessive storage use
+    await TokenDatabase.pruneHistory();
+  } catch (error) {
+    console.error("[background] Error initializing storage", error);
+  }
+}
 
 // Function to inject content script into a tab
 function injectContentScript(tabId: number) {
@@ -21,7 +49,7 @@ function injectContentScript(tabId: number) {
       chrome.scripting.executeScript(
         {
           target: { tabId },
-          files: ["contentScript.js"],
+          files: ["chatgpt.js"],
         },
         () => {
           if (chrome.runtime.lastError) {
@@ -44,13 +72,13 @@ function injectContentScript(tabId: number) {
   });
 }
 
-// Monitor tab updates to inject script into ChatGPT pages
+// Monitor tab updates to inject script into relevant pages
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   console.log(`[background] Tab ${tabId} updated:`, changeInfo.status);
 
   // Only act when the page is fully loaded
-  if (changeInfo.status === "complete" && tab.url?.includes("chatgpt.com")) {
-    console.log(`[background] ChatGPT page loaded in tab ${tabId}`);
+  if (changeInfo.status === "complete") {
+    console.log(`[background] Page loaded in tab ${tabId}:`, tab.url);
 
     // Check if we've already injected a script into this tab
     if (!activeTabsWithScript.has(tabId)) {
@@ -87,20 +115,8 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // Handle installation and updates
 chrome.runtime.onInstalled.addListener(() => {
   console.log("[background] onInstalled event fired");
-  // Initialize token stats if not already set
-  chrome.storage.local.get(["tokenStats"], (result) => {
-    console.log("[background] storage.local.get callback", result);
-    if (!result.tokenStats) {
-      const stringInitialStats: TokenStats = {
-        prompts: 0,
-        cachedMessages: [],
-      };
-      console.log("[background] Initializing stats", stringInitialStats);
-      chrome.storage.local.set({
-        tokenStats: stringInitialStats,
-      });
-    }
-  });
+  // Initialize the storage
+  initializeStorage();
 
   // Inject the content script into any existing ChatGPT tabs
   chrome.tabs.query({ url: "https://chatgpt.com/*" }, (tabs) => {

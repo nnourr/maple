@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TokenCounter from "./TokenCounter";
-
-export interface TokenStats {
-  prompts: number;
-  cachedMessages: string[];
-}
+import { TokenDatabase, TokenStats } from "../utils/db";
 
 interface Message {
   type: string;
@@ -14,6 +10,7 @@ interface Message {
 const Popup: React.FC = () => {
   console.log("[Popup] Component rendering");
   const [stats, setStats] = useState<TokenStats>({
+    timestamp: Date.now(),
     prompts: 0,
     cachedMessages: [],
   });
@@ -24,6 +21,19 @@ const Popup: React.FC = () => {
   const [currentTabId, setCurrentTabId] = useState<number | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>("");
   const [checkAttempts, setCheckAttempts] = useState(0);
+
+  // Function to load token stats from the database
+  const loadStatsFromDatabase = async () => {
+    try {
+      const latestStats = await TokenDatabase.getLatestStats();
+      if (latestStats) {
+        console.log("[Popup] Loaded stats from database", latestStats);
+        setStats(latestStats);
+      }
+    } catch (error) {
+      console.error("[Popup] Error loading stats from database", error);
+    }
+  };
 
   // Function to load token stats from the current tab
   const loadStatsFromCurrentTab = () => {
@@ -56,12 +66,15 @@ const Popup: React.FC = () => {
           tabs[0].id!,
           { type: "GET_TOKEN_COUNTS" },
           (response: TokenStats | undefined) => {
-            const error = chrome.runtime.lastError!;
+            const error = chrome.runtime.lastError;
             if (error) {
               console.error("[Popup] Error sending message:", error);
               setDebugInfo((prev) => prev + `\nError: ${error.message}`);
               setContentScriptActive(false);
               setLoading(false);
+
+              // Fall back to database if content script is not available
+              loadStatsFromDatabase().then(() => setLoading(false));
               return;
             }
 
@@ -76,6 +89,9 @@ const Popup: React.FC = () => {
             } else {
               setDebugInfo((prev) => prev + "\nNo data in response");
               setContentScriptActive(false);
+
+              // Fall back to database if no response data
+              loadStatsFromDatabase();
             }
             setLoading(false);
           }
@@ -84,7 +100,9 @@ const Popup: React.FC = () => {
         console.log("[Popup] Not on ChatGPT page");
         setDebugInfo((prev) => prev + "\nNot on ChatGPT page ✗");
         setContentScriptActive(false);
-        setLoading(false);
+
+        // Load from database if not on ChatGPT page
+        loadStatsFromDatabase().then(() => setLoading(false));
       }
     });
   };
@@ -317,18 +335,10 @@ const Popup: React.FC = () => {
     console.log("[Popup] useEffect hook running");
     setDebugInfo("Initializing...");
 
-    // Load initial stats from storage
-    chrome.storage.local.get(["tokenStats"], (result) => {
-      console.log("[Popup] Loaded stats from storage", result);
-      if (result.tokenStats) {
-        setStats(result.tokenStats as TokenStats);
-        console.log("[Popup] Stats set from storage", result.tokenStats);
-      } else {
-        console.error("[Popup] Token stats not found in storage");
-      }
-    });
+    // First try to load from database
+    loadStatsFromDatabase();
 
-    // Load stats from current tab
+    // Then try to get latest from content script
     loadStatsFromCurrentTab();
 
     // Listen for updates from content script
@@ -373,21 +383,47 @@ const Popup: React.FC = () => {
     };
   }, [currentTabId]); // Re-run when currentTabId changes
 
-  const handleReset = (): void => {
+  const handleReset = async (): Promise<void> => {
     console.log("[Popup] handleReset called");
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      console.log("[Popup] Active tab for reset", tabs);
-      if (tabs[0]) {
-        console.log("[Popup] Sending RESET_COUNTS message to tab", tabs[0].id);
-        chrome.tabs.sendMessage(tabs[0].id!, { type: "RESET_COUNTS" }, () => {
-          console.log("[Popup] Reset complete, updating local stats");
-          setStats({
+
+    try {
+      // First try to clear the database
+      await TokenDatabase.clearStats();
+
+      // Then try to reset via content script if on ChatGPT page
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        console.log("[Popup] Active tab for reset", tabs);
+        if (tabs[0] && tabs[0].url?.includes("chatgpt.com")) {
+          console.log(
+            "[Popup] Sending RESET_COUNTS message to tab",
+            tabs[0].id
+          );
+          chrome.tabs.sendMessage(tabs[0].id!, { type: "RESET_COUNTS" }, () => {
+            console.log("[Popup] Reset complete, updating local stats");
+
+            const resetStats: TokenStats = {
+              timestamp: Date.now(),
+              prompts: 0,
+              cachedMessages: [],
+            };
+
+            setStats(resetStats);
+          });
+        } else {
+          // If not on ChatGPT page, just reset the popup state
+          const resetStats: TokenStats = {
+            timestamp: Date.now(),
             prompts: 0,
             cachedMessages: [],
-          });
-        });
-      }
-    });
+          };
+
+          setStats(resetStats);
+          TokenDatabase.saveStats(resetStats);
+        }
+      });
+    } catch (error) {
+      console.error("[Popup] Error during reset", error);
+    }
   };
 
   if (loading) {
@@ -417,7 +453,7 @@ const Popup: React.FC = () => {
         )}
       </header>
 
-      <TokenCounter prompts={stats.prompts} onReset={handleReset} />
+      <TokenCounter stats={stats} onReset={handleReset} />
 
       <footer className="mt-4 text-center text-gray-500 text-xs">
         <small>

@@ -14,18 +14,18 @@ function Home() {
   };
 
   return (
-    <div className="overflow-hidden min-h-screen flex flex-col items-center justify-center">
-      <div className="w-full max-w-2xl px-4 mb-12" id="mount-hook">
-        <div className="pointer-events-none flex flex-row items-center justify-center scale-250 mb-4 max-w-screen">
+    <div className="w-full flex justify-center items-center h-full">
+      <div className="w-full h-3/5 max-w-2xl px-4" id="mount-hook">
+        <div className="pointer-events-none flex flex-row items-center justify-center mb-4 gap-4 max-w-screen">
           <img
             src="/public/logo.svg"
             alt="Oak"
-            className="w-16 h-16 mb-8 translate-x-[16px]"
+            className="w-36 aspect-square mb-8  "
           />
           <img
             src="/public/logo-text.png"
             alt="Oak"
-            className="w-36 h-24 mb-2 "
+            className="w-72 aspect-auto mb-2 "
           />
         </div>
         <form onSubmit={handleSearch} className="w-full">

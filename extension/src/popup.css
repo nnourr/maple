@@ -1,8 +1,9 @@
-@tailwind base;
+@import "tailwindcss";
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 
-body {
+/* body {
   width: 300px;
   min-height: 200px;
   margin: 0;
@@ -110,7 +111,6 @@ footer {
   text-align: center;
 }
 
-/* Debugging tools */
 .debug-section {
   margin-top: 10px;
   border-top: 1px dashed #ccc;
@@ -178,4 +178,4 @@ footer {
 
 .troubleshoot-button:hover {
   background-color: #e8eaed;
-}
+} */

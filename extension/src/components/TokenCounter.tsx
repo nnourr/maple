@@ -1,14 +1,20 @@
 import React from "react";
+import { TokenStats } from "../utils/db";
 
 interface TokenCounterProps {
-  prompts: number;
+  stats: TokenStats;
   onReset: () => void;
 }
 
-const TokenCounter: React.FC<TokenCounterProps> = ({ prompts, onReset }) => {
-  console.log("[TokenCounter] Rendering with props", {
-    prompts,
-  });
+const TokenCounter: React.FC<TokenCounterProps> = ({ stats, onReset }) => {
+  console.log("[TokenCounter] Rendering with props", stats);
+
+  // Format the timestamp
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
+
   return (
     <div className="token-counter">
       <h2 className="text-base font-medium mb-2">Token Usage</h2>
@@ -16,7 +22,14 @@ const TokenCounter: React.FC<TokenCounterProps> = ({ prompts, onReset }) => {
       <div className="bg-white rounded p-3 shadow-sm mb-4">
         <div className="flex justify-between py-1">
           <span>Total Prompts:</span>
-          <span className="font-medium">{prompts.toLocaleString()}</span>
+          <span className="font-medium">{stats.prompts.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between py-1">
+          <span>Last Updated:</span>
+          <span className="font-medium">
+            {formatTimestamp(stats.timestamp)}
+          </span>
         </div>
 
         <div className="flex justify-between py-1 mt-1 pt-1 border-t border-gray-200 font-bold">

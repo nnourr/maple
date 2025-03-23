@@ -55,12 +55,16 @@ cd chatgpt-token-counter
 npm install
 ```
 
-3. Start the development server (watches for changes):
+3. Configure environment variables:
+   - Copy extension/.env.example to extension/.env
+   - Update the OAK_URL value in the .env file
+
+4. Start the development server (watches for changes):
 ```
 npm start
 ```
 
-4. Build for production:
+5. Build for production:
 ```
 npm run build
 ```
@@ -69,7 +73,7 @@ npm run build
 
 ```
 ├── public/                # Static assets
-│   ├── manifest.json      # Extension manifest
+│   ├── manifest.json      # Extension manifest (uses %OAK_URL% placeholder)
 │   └── popup.html         # Popup HTML template
 ├── src/
 │   ├── components/        # React components

@@ -1,13 +1,19 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { DefinePlugin } = require('webpack');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+const env = dotenv.config().parsed || {};
 
 module.exports = {
   mode: 'development',
   entry: {
     popup: './src/popup.tsx',
     background: './src/background.ts',
-    contentScript: './src/content/contentScript.ts'
+    chatgpt: './src/content/chatgpt.ts',
+    dashboard: './src/content/dashboard.tsx'
   },
   devtool: 'inline-source-map', // Changed from default eval source map
   output: {
@@ -56,12 +62,29 @@ module.exports = {
     ]
   },
   plugins: [
+    new DefinePlugin({
+      'process.env': JSON.stringify(env)
+    }),
     new CopyPlugin({
       patterns: [
         {
           from: 'public',
+          to: '.',
           globOptions: {
             ignore: ['**/popup.html'] // Exclude popup.html from being copied directly
+          },
+          transform(content, path) {
+            // Replace environment variables in manifest.json
+            if (path.endsWith('manifest.json')) {
+              let manifestContent = content.toString();
+              // Replace placeholders with actual values
+              Object.keys(env).forEach(key => {
+                const placeholder = `%${key}%`;
+                manifestContent = manifestContent.replace(new RegExp(placeholder, 'g'), env[key]);
+              });
+              return Buffer.from(manifestContent);
+            }
+            return content;
           }
         }
       ],

@@ -1,4 +1,5 @@
 import { debounce } from "../utils/debounce";
+import { TokenDatabase, TokenStats } from "../utils/db";
 
 // Immediately log to verify script execution
 console.log("[contentScript] SCRIPT STARTING - Version 1.0.3");
@@ -59,18 +60,9 @@ try {
     document.body.dataset.extensionLoaded
   );
 
-  interface SessionStats {
-    prompts: number;
-    cachedMessages: string[];
-  }
-
-  interface Message {
-    type: string;
-    data?: SessionStats;
-  }
-
   // Track token counts for the current session
-  let sessionStats: SessionStats = {
+  let sessionStats: TokenStats = {
+    timestamp: Date.now(),
     prompts: 0,
     cachedMessages: [],
   };
@@ -79,24 +71,50 @@ try {
   let autoSaveInterval: number | null = null;
 
   // Load existing stats
-  chrome.storage.local.get(["tokenStats"], (result) => {
-    console.log("[contentScript] Loaded stats from storage", result);
-    if (result.tokenStats) {
-      sessionStats = result.tokenStats as SessionStats;
-      console.log("[contentScript] Using stored stats", sessionStats);
+  async function loadStats() {
+    try {
+      const stats = await TokenDatabase.getLatestStats();
+      if (stats) {
+        console.log("[contentScript] Loaded stats from storage", stats);
+        // Only use cached messages from previous stats, but create a new timestamp
+        sessionStats = {
+          timestamp: Date.now(),
+          prompts: stats.prompts,
+          cachedMessages: stats.cachedMessages,
+        };
+      } else {
+        console.log("[contentScript] No existing stats found in storage");
+      }
+    } catch (error) {
+      console.error("[contentScript] Error loading stats", error);
     }
-  });
-  // Update statistics in storage
-  function updateStats(): void {
-    console.log("[contentScript] updateStats called", sessionStats);
-    chrome.storage.local.set({ tokenStats: sessionStats });
+  }
 
-    // Also notify popup if it's open
-    console.log("[contentScript] Sending update message to popup");
-    chrome.runtime.sendMessage({
-      type: "TOKEN_COUNT_UPDATE",
-      data: sessionStats,
-    });
+  // Initialize by loading existing stats
+  loadStats();
+
+  // Update statistics in storage
+  async function updateStats(): Promise<void> {
+    console.log("[contentScript] updateStats called", sessionStats);
+
+    // Create a new stats object with current timestamp
+    const statsToSave: TokenStats = {
+      ...sessionStats,
+      timestamp: Date.now(),
+    };
+
+    try {
+      await TokenDatabase.saveStats(statsToSave);
+
+      // Also notify popup if it's open
+      console.log("[contentScript] Sending update message to popup");
+      chrome.runtime.sendMessage({
+        type: "TOKEN_COUNT_UPDATE",
+        data: statsToSave,
+      });
+    } catch (error) {
+      console.error("[contentScript] Error saving stats to storage", error);
+    }
   }
 
   function extractMessageID(element: Element): string {
@@ -116,7 +134,10 @@ try {
       )
     );
 
-    const totalMes = new Set(sessionStats.cachedMessages).union(newMes);
+    const totalMes = new Set([
+      ...sessionStats.cachedMessages,
+      ...Array.from(newMes),
+    ]);
 
     // Update storage if any changes were made
     if (totalMes.size !== sessionStats.cachedMessages.length) {
@@ -142,26 +163,35 @@ try {
     observer.observe(presentationElement, { childList: true, subtree: true });
   }
 
+  // Set up the auto-save interval (every 30 seconds)
+  autoSaveInterval = window.setInterval(() => {
+    console.log("[contentScript] Auto-saving stats (30-second interval)");
+    updateStats();
+  }, 30000);
+
   // Listen for messages from the popup
   console.log("[contentScript] Setting up message listener");
-  chrome.runtime.onMessage.addListener(
-    (message: Message, sender, sendResponse) => {
-      console.log("[contentScript] Message received", message, sender);
-      if (message.type === "GET_TOKEN_COUNTS") {
-        console.log("[contentScript] Sending token counts", sessionStats);
-        sendResponse(sessionStats);
-      } else if (message.type === "RESET_COUNTS") {
-        console.log("[contentScript] Resetting counts");
-        sessionStats = {
-          prompts: 0,
-          cachedMessages: [],
-        } as SessionStats;
-        updateStats();
-        sendResponse({ success: true });
-      }
-      return true;
+  chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+    console.log("[contentScript] Message received", message, sender);
+    if (message.type === "GET_TOKEN_COUNTS") {
+      console.log("[contentScript] Sending token counts", sessionStats);
+      sendResponse(sessionStats);
+    } else if (message.type === "RESET_COUNTS") {
+      console.log("[contentScript] Resetting counts");
+      sessionStats = {
+        timestamp: Date.now(),
+        prompts: 0,
+        cachedMessages: [],
+      };
+      updateStats();
+      sendResponse({ success: true });
+    } else if (message.type === "GET_TOKEN_HISTORY") {
+      console.log("[contentScript] Retrieving token history");
+      // This will be handled by the popup directly with the database
+      sendResponse({ success: true });
     }
-  );
+    return true;
+  });
 
   // Add a ping function for the popup to check if content script is alive
   window.addEventListener("message", (event) => {
