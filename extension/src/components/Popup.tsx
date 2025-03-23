@@ -438,7 +438,7 @@ const Popup: React.FC = () => {
 
   console.log("[Popup] Rendering with stats", stats);
   return (
-    <div className="p-4 bg-[#efefe0] border-2 border-solid inside-">
+    <div className="p-4 bg-[#f6f6ec] border-2 border-solid inside-">
       <header className="mb-4  pb-2">
         <div className="flex items-center justify-center gap-2">
           <img
@@ -452,17 +452,6 @@ const Popup: React.FC = () => {
             alt="Logo"
           />
         </div>
-        {/* {contentScriptActive === false && (
-          <div className="bg-red-50 text-red-800 p-2 rounded text-xs text-center mt-1">
-            Content script is not active. Please refresh the ChatGPT page.
-            <button
-              className="block mx-auto mt-1 px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs hover:bg-gray-200"
-              onClick={reloadContentScript}
-            >
-              Attempt Repair
-            </button>
-          </div>
-        )} */}
       </header>
 
       <CarbonFootprintDisplay />

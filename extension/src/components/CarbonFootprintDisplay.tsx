@@ -69,7 +69,7 @@ const CarbonFootprintDisplay: React.FC = () => {
   // Compare to everyday activities for context
   const getComparison = (grams: number): string => {
     return `You need to plant ${getTreeOffset(grams)} tree${
-      getTreeOffset(grams) > 1 ? "s" : ""
+      getTreeOffset(grams) !== 1 ? "s" : ""
     } to offset this.`;
   };
 
@@ -79,7 +79,7 @@ const CarbonFootprintDisplay: React.FC = () => {
   const monthlyPageViewFootprint = carbonData.pageViewFootprint * 30;
 
   return (
-    <div className="carbon-footprint mt-4 pt-4 border-t border-gray-200">
+    <div className="carbon-footprint mt-4 pt-4">
       <h3 className="text-sm font-medium mb-2">Carbon Footprint Estimate</h3>
 
       {/* Daily Footprint Panel */}
@@ -127,9 +127,12 @@ const CarbonFootprintDisplay: React.FC = () => {
         </div>
         <div className="w-full flex justify-center items-center">
           <button
-            className="px-4 py-2 bg-emerald-50 border-2 border-emerald-800/20 font-bold text-emerald-800 text-xl rounded-lg w-4/5 cursor-pointer"
+            className="px-4 py-2 bg-emerald-50 border-2 shadow-2xs hover:shadow transition-all border-emerald-800/20 font-bold text-emerald-800 text-xl rounded-lg w-4/5 cursor-pointer"
             onClick={() => {
-              alert("Planted " + getTreeOffset(monthlyFootprint) + "tree(s)");
+              window.open(
+                "https://onetreeplanted.org/products/trees",
+                "_blank"
+              );
               setCarbonData((prev) => {
                 return {
                   ...prev,

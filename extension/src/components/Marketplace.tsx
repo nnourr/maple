@@ -302,7 +302,7 @@ export default function Marketplace() {
           Eco-Friendly Marketplace
         </h2>
         <div className="bg-green-50 px-4 py-2 rounded-full border border-green-100">
-          <span className="text-sm font-medium text-green-800">
+          <span className="text-sm font-medium text-green-800 text-nowrap">
             Balance: {userTokens} 🌿
           </span>
         </div>
