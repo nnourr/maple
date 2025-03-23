@@ -15,7 +15,8 @@ module.exports = {
     chatgpt: './src/content/chatgpt.ts',
     pageview: './src/content/pageview.ts',
     dashboard: './src/content/dashboard.tsx',
-    marketplace: './src/content/injectMarketplace.tsx'
+    marketplace: './src/content/injectMarketplace.tsx',
+    tokenCounter: './src/content/tokenCounter.ts'
   },
   devtool: 'inline-source-map', // Changed from default eval source map
   output: {

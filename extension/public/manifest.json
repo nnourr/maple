@@ -41,6 +41,14 @@
       "js": [
         "dashboard.js"
       ]
+    },
+    {
+      "matches": [
+        "%OAK_URL%/search*"
+      ],
+      "js": [
+        "tokenCounter.js"
+      ]
     }
   ],
   "permissions": [
@@ -76,6 +84,17 @@
       ],
       "matches": [
         "%OAK_URL%/*"
+      ]
+    },
+    {
+      "resources": [
+        "tokenCounter.js"
+      ],
+      "matches": [
+        "%OAK_URL%/*"
+      ],
+      "include_globs": [
+        "*search*"
       ]
     },
     {

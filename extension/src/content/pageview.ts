@@ -101,23 +101,6 @@ function trackSpaNavigation() {
   // Store initial URL
   let lastUrl = document.location.href;
 
-  if (
-    lastUrl.includes("oak.nnourr.tech/search") ||
-    lastUrl.includes("localhost:5173/search")
-  ) {
-    chrome.storage.local.get(["tokens"], function (result) {
-      let tokens = result.tokens;
-      if (tokens) {
-        tokens += 15;
-      } else {
-        tokens = 15;
-      }
-      chrome.storage.local.set({ tokens: tokens }, function () {
-        console.log("[PageView] Tokens is set to " + tokens);
-      });
-    });
-  }
-
   // Create an observer to detect URL changes
   const observer = new MutationObserver(() => {
     if (lastUrl !== document.location.href) {
