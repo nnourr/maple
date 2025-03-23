@@ -28,7 +28,7 @@ const MAX_HISTORY_LENGTH = 1000; // Maximum number of history entries to keep
 
 // Carbon footprint constants (in grams)
 const PROMPT_CARBON_FACTOR = 4.32;
-const PAGEVIEW_CARBON_FACTOR = 1.76;
+const PAGEVIEW_CARBON_FACTOR = 0.359;
 
 export const UnifiedStatsTracker = {
   async getData(): Promise<UnifiedStatsData> {

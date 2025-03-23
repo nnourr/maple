@@ -20,12 +20,12 @@ function Home() {
           <img
             src="/logo.svg"
             alt="Oak"
-            className="w-36 aspect-square mb-8  "
+            className="w-24 md:w-36 aspect-square mb-8  "
           />
           <img
             src="/logo-text.png"
             alt="Oak"
-            className="w-72 aspect-auto mb-2 "
+            className="w-40 md:w-72 aspect-auto mb-2 "
           />
         </div>
         <form onSubmit={handleSearch} className="w-full">
